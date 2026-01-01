@@ -41,6 +41,16 @@ General Rules:
 Assumptions:
 - The user have kubernetes installed
 - The user understands kubernetes basics
+
+Placeholders:
+Namespace - <namespace>
+Pod - <pod-name>
+Service - <service-name>
+Configmap - <configmap-name>
+PV - <pv-name>
+PVC - <pvc-name>
+Deployment - <deployment-name>
+Secret - <secret-name>, etc.
 """
 
 def get_api_key():
@@ -89,21 +99,22 @@ def query_ollama_mistral(query, output):
                 "num_predict": 80
                 }
         }
-        if(output.get("context")):
-            request_json["context"] = output["context"]
+        # if(output.get("context")):
+        #     request_json["context"] = output["context"]
 
         response = requests.post("http://localhost:11434/api/generate", json=request_json)
         response.raise_for_status()
         json_response = response.json()
         output["prev_cmd"] = json_response["response"].strip()
-        if output["prev_cmd"].startswith("kubectl"):
-            output["context"] = json_response["context"]
+        # if output["prev_cmd"].startswith("kubectl"):
+        #     output["context"] = json_response["context"]
         return output
     except Exception as e:
         print(f"ERROR: Failed to generate response due to an unknown error: {e}")
         return output
 
 def query_openai(query):
+    from openai import OpenAI
     try:
         client = OpenAI(api_key=get_api_key())
         response = client.chat.completions.create(
@@ -125,7 +136,7 @@ def main():
     print("Type 'exit' or 'quit' to leave..")
     output = {
         "prev_cmd": None,
-        "context": None
+        # "context": None
     }
     risk_metrics = {
         "LOW": 
@@ -143,7 +154,6 @@ def main():
             case "OLLAMA-MISTRAL":
                 output = query_ollama_mistral(query, output)
             case "OPENAI":
-                from openai import OpenAI
                 output = query_openai(query)
         command = output.get("prev_cmd")
         if command != None:

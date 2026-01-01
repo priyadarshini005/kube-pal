@@ -1,7 +1,6 @@
 import os
 import sys
 import requests
-from openai import OpenAI
 
 model = "OLLAMA-MISTRAL"
 
@@ -144,15 +143,17 @@ def main():
             case "OLLAMA-MISTRAL":
                 output = query_ollama_mistral(query, output)
             case "OPENAI":
+                from openai import OpenAI
                 output = query_openai(query)
         command = output.get("prev_cmd")
-        if command != None and not "kubectl" in command.split(" ")[0]:
+        if command != None:
+            if not "kubectl" in command.split(" ")[0]:
+                print(command)
+                continue
             print(command)
-            continue
-        print(command)
-        risk_level = "LOW" if command.split(" ")[1] in risk_metrics["LOW"] else "MEDIUM" if command.split(" ")[1] in risk_metrics["MEDIUM"] else "HIGH"
-        match risk_level:
-            case "MEDIUM" | "HIGH": print(f"WARNING: This is a {risk_level} risk command!")
+            risk_level = "LOW" if command.split(" ")[1] in risk_metrics["LOW"] else "MEDIUM" if command.split(" ")[1] in risk_metrics["MEDIUM"] else "HIGH"
+            match risk_level:
+                case "MEDIUM" | "HIGH": print(f"WARNING: This is a {risk_level} risk command!")
 
 if __name__ == "__main__":
     main()
